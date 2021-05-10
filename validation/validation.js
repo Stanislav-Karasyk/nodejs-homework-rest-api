@@ -7,6 +7,7 @@ const schemaCreateContact = Joi.object({
     .length(10)
     .pattern(/^[0-9]+$/)
     .required(),
+  favorite: Joi.boolean().optional(),
 });
 
 const schemaUpdateContact = Joi.object({
@@ -16,6 +17,7 @@ const schemaUpdateContact = Joi.object({
     .length(10)
     .pattern(/^[0-9]+$/)
     .optional(),
+  favorite: Joi.boolean().optional(),
 }).min(1);
 
 const validate = (schema, obj, next) => {
@@ -29,10 +31,18 @@ const validate = (schema, obj, next) => {
   next();
 };
 
+const schemaUpdateStatusContact = Joi.object({
+  favorite: Joi.boolean().required(),
+});
+
 module.exports.validateCreateContact = (req, _res, next) => {
   return validate(schemaCreateContact, req.body, next);
 };
 
 module.exports.validateUpdateContact = (req, _res, next) => {
   return validate(schemaUpdateContact, req.body, next);
+};
+
+module.exports.validateUpdateStatusContact = (req, _res, next) => {
+  return validate(schemaUpdateStatusContact, req.body, next);
 };
