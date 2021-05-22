@@ -20,6 +20,11 @@ const schemaUpdateContact = Joi.object({
   favorite: Joi.boolean().optional(),
 }).min(1);
 
+const schemaValidateAuth = Joi.object({
+  email: Joi.string().email().required(),
+  password: Joi.string().min(6).required(),
+});
+
 const validate = (schema, obj, next) => {
   const { error } = schema.validate(obj);
   if (error) {
@@ -45,4 +50,8 @@ module.exports.validateUpdateContact = (req, _res, next) => {
 
 module.exports.validateUpdateStatusContact = (req, _res, next) => {
   return validate(schemaUpdateStatusContact, req.body, next);
+};
+
+module.exports.validateAuth = (req, _res, next) => {
+  return validate(schemaValidateAuth, req.body, next);
 };
