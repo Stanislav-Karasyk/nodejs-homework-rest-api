@@ -1,12 +1,15 @@
-const Contact = require('../services/schemas/contact');
+const Contact = require("../services/schemas/contact");
 
-const listContacts = async () => {
-  const data = await Contact.find({});
+const listContacts = async (userId) => {
+  const data = await Contact.find({ owner: userId });
   return data;
 };
 
-const getContactById = async (contactId) => {
-  const data = await Contact.findOne({ _id: contactId });
+const getContactById = async (userId, contactId) => {
+  const data = await Contact.findOne({
+    owner: userId,
+    _id: contactId,
+  });
   return data;
 };
 
@@ -15,25 +18,28 @@ const addContact = async (body) => {
   return data;
 };
 
-const updateContact = async (contactId, body) => {
+const updateContact = async (userId, contactId, body) => {
   const data = await Contact.findByIdAndUpdate(
-    { _id: contactId },
+    { owner: userId, _id: contactId },
     { ...body },
-    { new: true },
+    { new: true }
   );
   return data;
 };
 
-const removeContact = async (contactId) => {
-  const data = await Contact.findByIdAndRemove({ _id: contactId });
+const removeContact = async (userId, contactId) => {
+  const data = await Contact.findByIdAndRemove({
+    owner: userId,
+    _id: contactId,
+  });
   return data;
 };
 
-const updateStatusContact = async (contactId, body) => {
+const updateStatusContact = async (userId, contactId, body) => {
   const data = await Contact.findByIdAndUpdate(
-    { _id: contactId },
+    { owner: userId, _id: contactId },
     { ...body },
-    { new: true },
+    { new: true }
   );
   return data;
 };
