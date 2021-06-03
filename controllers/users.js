@@ -1,16 +1,18 @@
 const jwt = require("jsonwebtoken");
 const Users = require("../model/users");
-const fs = require('fs/promises');
-const path = require('path');
-const Jimp = require('jimp');
+const fs = require("fs/promises");
+const path = require("path");
+const Jimp = require("jimp");
 const createFolderIsExist = require("../services/create-dir");
+const EmailService = require("../services/email");
+const { v4: uuid } = require("uuid");
 
 require("dotenv").config();
 const SECRET_KEY = process.env.JWT_SECRET_KEY;
 
 const signup = async (req, res, next) => {
   try {
-    const { email } = req.body;
+    const { email, password } = req.body;
     const user = await Users.findByEmail(email);
     if (user) {
       return next({
@@ -19,7 +21,12 @@ const signup = async (req, res, next) => {
         message: "Email in use",
       });
     }
-    const newUser = await Users.create(req.body);
+
+    const verificationToken = uuid();
+    const emailService = new EmailService();
+    await emailService.sendEmail(verificationToken, email);
+
+    const newUser = await Users.create({ email, password, verificationToken });
     return res.status(201).json({
       status: "success",
       code: 201,
@@ -41,7 +48,7 @@ const login = async (req, res, next) => {
     const { email, password } = req.body;
     const user = await Users.findByEmail(email);
     const isValidPassword = await user.validPassword(password);
-    if (!user || !isValidPassword) {
+    if (!user || !isValidPassword || !user.verify) {
       return next({
         status: "Error",
         code: 401,
@@ -95,7 +102,6 @@ const currentUser = async (req, res, next) => {
   }
 };
 
-
 const saveAvatar = async (req) => {
   const id = String(req.user._id);
   const AVATAR_DIR = path.join(process.cwd(), "public", "avatars");
@@ -123,7 +129,7 @@ const avatars = async (req, res, next) => {
     const avatarUrl = await saveAvatar(req);
     await Users.updateAvatar(id, avatarUrl);
     return res.json({
-      status: 'success',
+      status: "success",
       code: 200,
       data: {
         avatarUrl,
@@ -134,4 +140,35 @@ const avatars = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, logout, currentUser, avatars };
+const verify = async (req, res, next) => {
+  console.log(req.params.verificationToken);
+  try {
+    const user = await Users.findByVerificationToken(
+      req.params.verificationToken
+    );
+    if (user) {
+      return res.json({
+        status: "success",
+        code: 200,
+        message: "Verification successful",
+      });
+    } else {
+      return next({
+        status: "Error",
+        code: 404,
+        message: "User not found",
+      });
+    }
+  } catch (e) {
+    next(e);
+  }
+};
+
+module.exports = {
+  signup,
+  login,
+  logout,
+  currentUser,
+  avatars,
+  verify,
+};
